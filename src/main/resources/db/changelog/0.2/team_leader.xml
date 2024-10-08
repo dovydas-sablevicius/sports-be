@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+  <changeSet id="add_leader_to_team_table" author="dovydas.sablevicius">
+    <addColumn tableName="sports_team">
+      <column name="leader_id" type="varchar(128)">
+        <constraints nullable="false" foreignKeyName="fk_sports_team_leader"
+                     referencedTableName="sports_user" referencedColumnNames="id"/>
+      </column>
+    </addColumn>
+  </changeSet>
+</databaseChangeLog>

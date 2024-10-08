@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="create_tournament_user_team_table" author="kornelijus.semenas">
+    <createTable tableName="tournament_user_team">
+      <column name="user_id" type="uuid">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_tournament"
+                     foreignKeyName="fk_tournament_user_team_user_id" references="sports_user(id)"/>
+      </column>
+      <column name="tournament_id" type="uuid">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_tournament"
+                    foreignKeyName="fk_tournament_user_team_tournament_id" references="tournament(id)"/>
+      </column>
+      <column name="team_id" type="uuid">
+        <constraints nullable="true" foreignKeyName="fk_tournament_user_team_team_id"
+                     references="sports_team(id)"/>
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

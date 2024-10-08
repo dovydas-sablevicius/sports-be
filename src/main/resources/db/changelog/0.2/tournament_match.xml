@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+  <changeSet id="create_tournament_match_table" author="kornelijus.semenas">
+    <createTable tableName="tournament_match">
+      <column name="match_id" type="varchar(255)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="tournament_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="state" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="round" type="integer">
+        <constraints nullable="false"/>
+      </column>
+      <column name="start_time" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_updated" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column name="next_match_id" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="match_number" type="integer">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addForeignKeyConstraint baseTableName="tournament_match" baseColumnNames="tournament_id"
+                              constraintName="fk_tournament_match_tournament_id"
+                              referencedTableName="tournament" referencedColumnNames="id"/>
+  </changeSet>
+</databaseChangeLog>

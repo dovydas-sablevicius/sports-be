@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+  <changeSet id="create_city_table" author="aleksandra.kondratjeva">
+    <createTable tableName="city">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true" unique="true"/>
+      </column>
+      <column name="name" type="varchar(64)"/>
+      <column name="country_id" type="uuid">
+        <constraints nullable="false" foreignKeyName="country_fk"
+                     references="country(id)"/>
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

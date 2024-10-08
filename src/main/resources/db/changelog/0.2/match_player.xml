@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+  <changeSet id="create_match_player_table" author="kornelijus.semenas">
+    <createTable tableName="match_player">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="match_id" type="varchar(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="user_id" type="varchar(128)">
+        <constraints nullable="true" unique="false"/>
+      </column>
+      <column name="team_id" type="uuid">
+        <constraints nullable="true" unique="false"/>
+      </column>
+      <column name="score" type="integer">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_winner" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column name="status" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="result_text" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="match_player" baseColumnNames="match_id"
+                             constraintName="fk_match_player_match_id"
+                             referencedTableName="tournament_match"
+                             referencedColumnNames="match_id"/>
+    <addForeignKeyConstraint baseTableName="match_player" baseColumnNames="user_id"
+                             constraintName="fk_match_player_user_id"
+                             referencedTableName="sports_user" referencedColumnNames="id"/>
+    <addForeignKeyConstraint baseTableName="match_player" baseColumnNames="team_id"
+                             constraintName="fk_match_player_team_id"
+                             referencedTableName="sports_team" referencedColumnNames="id"/>
+
+  </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+  <changeSet id="create_message_table" author="kornelijus.semenas">
+    <createTable tableName="message_table">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="user_id" type="varchar(128)">
+        <constraints nullable="false" />
+      </column>
+      <column name="tournament_id" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="content" type="varchar(1024)">
+        <constraints nullable="false" />
+      </column>
+      <column name="created_at" type="datetime">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+    <addForeignKeyConstraint baseTableName="message_table" baseColumnNames="user_id"
+                             constraintName="fk_message_table_user_id"
+                             referencedTableName="sports_user" referencedColumnNames="id" />
+    <addForeignKeyConstraint baseTableName="message_table" baseColumnNames="tournament_id"
+                              constraintName="fk_message_table_tournament_id"
+                              referencedTableName="tournament" referencedColumnNames="id" />
+  </changeSet>
+</databaseChangeLog>

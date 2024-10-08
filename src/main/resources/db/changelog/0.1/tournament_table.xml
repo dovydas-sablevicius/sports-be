@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+  <changeSet id="create_tournament_table" author="aleksandra.kondratjeva">
+    <createTable tableName="tournament">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true" unique="true"/>
+      </column>
+      <column name="name" type="varchar(32)"/>
+      <column name="description" type="varchar(1024)"/>
+      <column name="prizes" type="varchar(200)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="start_date" type="datetime"/>
+      <column name="end_date" type="datetime"/>
+      <column name="max_participants" type="integer"/>
+      <column name="tournament_table_type_id" type="uuid">
+        <constraints nullable="false" foreignKeyName="tournament_table_type_fk"
+                     references="tournament_table_type(id)"/>
+      </column>
+      <column name="tournament_type_id" type="uuid">
+        <constraints nullable="false" foreignKeyName="tournament_type_fk"
+                     references="tournament_type(id)"/>
+      </column>
+      <column name="city_id" type="uuid">
+        <constraints nullable="false" foreignKeyName="tournament_city_fk"
+                     references="city(id)"/>
+      </column>
+      <column name="participation_type" type="varchar(255)"/>
+      <column name="team_size" type="integer">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

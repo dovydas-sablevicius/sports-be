@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+  <include file="insert_cities_countries.xml" relativeToChangelogFile="true"/>
+  <include file="insert_table_types.xml" relativeToChangelogFile="true"/>
+  <include file="insert_tournament_types.xml" relativeToChangelogFile="true"/>
+  <include file="tag_table.xml" relativeToChangelogFile="true"/>
+  <include file="tournament_tag_table.xml" relativeToChangelogFile="true"/>
+  <include file="team.xml" relativeToChangelogFile="true"/>
+  <include file="delete_tournament_user_table.xml" relativeToChangelogFile="true"/>
+  <include file="tournament_user_team.xml" relativeToChangelogFile="true"/>
+  <include file="insert_tags.xml" relativeToChangelogFile="true"/>
+  <include file="user_changes.xml" relativeToChangelogFile="true"/>
+  <include file="team_leader.xml" relativeToChangelogFile="true"/>
+  <include file="tournament_match.xml" relativeToChangelogFile="true"/>
+  <include file="match_player.xml" relativeToChangelogFile="true"/>
+  <include file="update_tournament_table.xml" relativeToChangelogFile="true"/>
+  <include file="message_table.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="update_sports_user_pk_to_varchar" author="dovydas.sablevicius">
+    <dropForeignKeyConstraint baseTableName="tournament_user_team" constraintName="fk_tournament_user_team_user_id" />
+    <modifyDataType tableName="sports_user" columnName="id" newDataType="varchar(128)" />
+    <dropColumn tableName="sports_user" columnName="password"/>
+    <modifyDataType tableName="tournament_user_team" columnName="user_id" newDataType="varchar(128)" />
+    <addForeignKeyConstraint baseTableName="tournament_user_team" baseColumnNames="user_id"
+                             constraintName="fk_tournament_user_team_user_id"
+                             referencedTableName="sports_user" referencedColumnNames="id" />
+  </changeSet>
+</databaseChangeLog>
