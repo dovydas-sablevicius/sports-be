@@ -3,6 +3,7 @@ package com.sourcery.sport.user.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sourcery.sport.team.model.Team;
 import com.sourcery.sport.tournament.model.City;
+import com.sourcery.sport.user.dto.UserDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -51,5 +52,24 @@ public class User {
   private Set<Team> teams = new HashSet<>();
 
   public User() {
+  }
+  public User(UserDto userDto,City city)
+  {
+    this.id = userDto.getId();
+    this.email = userDto.getEmail();
+    this.name = userDto.getName();
+    this.surname = userDto.getSurname();
+    this.image = userDto.getImage();
+    this.phoneNumber = userDto.getPhoneNumber();
+    this.city = city;
+  }
+  public void updateUser(UserDto userDto, City city)
+  {
+    this.email = userDto.getEmail();
+    this.name = userDto.getName();
+    this.surname = userDto.getSurname();
+    this.image = userDto.getImage();
+    this.phoneNumber = userDto.getPhoneNumber();
+    this.city = city;
   }
 }
