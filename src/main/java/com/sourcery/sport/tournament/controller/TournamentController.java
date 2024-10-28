@@ -1,5 +1,9 @@
 package com.sourcery.sport.tournament.controller;
 
+import com.sourcery.sport.exception.MatchesNotGeneratedException;
+import com.sourcery.sport.exception.TournamentFullException;
+import com.sourcery.sport.exception.MatchesAlreadyGeneratedException;
+import com.sourcery.sport.exception.UserEmailNotFoundException;
 import com.sourcery.sport.match.dto.MatchDto;
 import com.sourcery.sport.match.model.Match;
 import com.sourcery.sport.match.model.MatchPlayer;
@@ -8,10 +12,10 @@ import com.sourcery.sport.match.service.MatchService;
 import com.sourcery.sport.team.dto.TeamDto;
 import com.sourcery.sport.team.model.Team;
 import com.sourcery.sport.team.service.TeamService;
-import com.sourcery.sport.tournament.dto.TournamentCreatedDto;
 import com.sourcery.sport.tournament.dto.TournamentDto;
 import com.sourcery.sport.tournament.dto.TournamentRegisterTeamDto;
 import com.sourcery.sport.tournament.dto.TournamentUpdateDto;
+import com.sourcery.sport.tournament.mapper.TournamentMapper;
 import com.sourcery.sport.tournament.model.City;
 import com.sourcery.sport.tournament.model.Tournament;
 import com.sourcery.sport.tournament.model.TournamentTableType;
@@ -83,37 +87,19 @@ public class TournamentController {
   }
 
   @PreAuthorize("hasAuthority('admin')")
-  @PostMapping("/create-tournament")
-  @ResponseBody
+  @PostMapping("/create")
   public ResponseEntity<?> createTournament(@RequestBody TournamentDto tournamentDto) {
-    try {
-      if (tournamentDto.getTournamentTableTypeId() == null
-          ||
-          tournamentDto.getTournamentTypeId() == null
-          ||
-          tournamentDto.getCityId() == null) {
-        throw new IllegalArgumentException("One or more required fields are missing.");
-      }
+    validateTournamentDto(tournamentDto);
 
-      Tournament tournament = tournamentService.saveTournament(toTournament(tournamentDto));
-      TournamentCreatedDto tournamentCreated = new TournamentCreatedDto(tournament.getId(), tournament.getName(),
-          tournament.getDescription(), tournament.getPrizes(),
-          tournament.getStartDate(), tournament.getEndDate(),
-          tournament.getMaxParticipants(), tournament.getTournamentTableType().getId(),
-          tournament.getTournamentType().getId(), tournament.getCity().getId(),
-          tournament.getParticipationType(), tournament.getTeamSize(), tournament.getTournamentTagsIds());
-      return ResponseEntity.ok(tournamentCreated);
-    } catch (IllegalArgumentException ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
+    Tournament tournament = tournamentService.saveTournament(toTournament(tournamentDto));
+
+    return ResponseEntity.ok(TournamentMapper.mapToTournamentCreatedDto(tournament));
   }
 
   @PreAuthorize("hasAuthority('admin')")
-  @PutMapping("/update-tournament")
-  @ResponseBody
+  @PutMapping("/update")
   public ResponseEntity<?> updateTournament(@RequestBody TournamentUpdateDto tournamentDto) {
     UUID tournamentId = tournamentDto.getId();
-
     Tournament existingTournament = tournamentService.getTournamentById(tournamentId);
 
     if (existingTournament == null) {
@@ -122,25 +108,10 @@ public class TournamentController {
 
     Tournament updatedTournament = tournamentService.updateTournament(existingTournament, tournamentDto);
 
-    TournamentUpdateDto tournamentUpdated = new TournamentUpdateDto(updatedTournament.getId(),
-        updatedTournament.getName(),
-        updatedTournament.getDescription(),
-        updatedTournament.getPrizes(),
-        updatedTournament.getStartDate(),
-        updatedTournament.getEndDate(),
-        updatedTournament.getMaxParticipants(),
-        updatedTournament.getTournamentTableType().getId(),
-        updatedTournament.getTournamentType().getId(),
-        updatedTournament.getCity().getId(),
-        updatedTournament.getParticipationType(),
-        updatedTournament.getTeamSize(),
-        updatedTournament.getTournamentTagsIds());
-
-    return ResponseEntity.ok(tournamentUpdated);
+    return ResponseEntity.ok(TournamentMapper.mapToTournamentUpdateDto(updatedTournament));
   }
 
-  @GetMapping("/get-all-tournaments")
-  @ResponseBody
+  @GetMapping("/all")
   public ResponseEntity<?> getAllTournaments() {
     try {
       List<Tournament> tournaments = tournamentService.getAll();
@@ -152,24 +123,16 @@ public class TournamentController {
 
   @GetMapping("/get-tournament/{tournamentId}")
   @ResponseBody
-  public ResponseEntity<?> getTournament(@PathVariable UUID tournamentId) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      return ResponseEntity.ok(tournament);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
+  public ResponseEntity<Tournament> getTournament(@PathVariable UUID tournamentId) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);
+    return ResponseEntity.ok(tournament);
   }
 
   @GetMapping("/{userId}/tournaments")
-  public ResponseEntity<?> getTournamentsByUserId(@PathVariable String userId) {
-    try {
-      String decodedUserId = URLDecoder.decode(userId, StandardCharsets.UTF_8);
-      List<Tournament> tournaments = tournamentUserTeamService.getTournamentsByUserId(decodedUserId);
-      return ResponseEntity.ok(tournaments);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
+  public ResponseEntity<List<Tournament>> getTournamentsByUserId(@PathVariable String userId) {
+    String decodedUserId = URLDecoder.decode(userId, StandardCharsets.UTF_8);
+    List<Tournament> tournaments = tournamentUserTeamService.getTournamentsByUserId(decodedUserId);
+    return ResponseEntity.ok(tournaments);
   }
 
   @GetMapping("/{tournamentId}/players")
@@ -180,64 +143,134 @@ public class TournamentController {
 
   @GetMapping("/{tournamentId}/teams")
   public ResponseEntity<List<TeamDto>> getTournamentTeams(@PathVariable UUID tournamentId) {
-    try {
-      List<TeamDto> teams = tournamentUserTeamService.getTeamsByTournamentId(tournamentId);
-      return ResponseEntity.ok(teams);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(null);
-    }
+    List<TeamDto> teams = tournamentUserTeamService.getTeamsByTournamentId(tournamentId);
+    return ResponseEntity.ok(teams);
   }
 
   @GetMapping("/get-tournament-by-city")
   @ResponseBody
-  public ResponseEntity<?> getTournamentByCity(@RequestParam("cityId") UUID cityId) {
-    try {
-      List<Tournament> filteredTournaments = tournamentService.getByCityId(cityId);
-      return ResponseEntity.ok(filteredTournaments);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
+  public ResponseEntity<List<Tournament>> getTournamentByCity(@RequestParam("cityId") UUID cityId) {
+    List<Tournament> filteredTournaments = tournamentService.getByCityId(cityId);
+    return ResponseEntity.ok(filteredTournaments);
   }
+
 
   @GetMapping("/get-tournament-by-date-range")
   @ResponseBody
-  public ResponseEntity<?> getTournamentsByDateRange(
+  public ResponseEntity<List<Tournament>> getTournamentsByDateRange(
       @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
       @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-    try {
-      List<Tournament> filteredTournaments = tournamentService.getTournamentsByDateRange(startDate, endDate);
-      return ResponseEntity.ok(filteredTournaments);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
+
+    List<Tournament> filteredTournaments = tournamentService.getTournamentsByDateRange(startDate, endDate);
+    return ResponseEntity.ok(filteredTournaments);
   }
+
 
   @GetMapping("/get-tournament-by-tags")
   @ResponseBody
-  public ResponseEntity<?> getTournamentsByTags(@RequestParam("tags") List<UUID> tagIds) {
-    try {
-      List<Tournament> filteredTournaments = tournamentService.getTournamentsByTags(tagIds);
-      return ResponseEntity.ok(filteredTournaments);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
+  public ResponseEntity<List<Tournament>> getTournamentsByTags(@RequestParam("tags") List<UUID> tagIds) {
+    List<Tournament> filteredTournaments = tournamentService.getTournamentsByTags(tagIds);
+    return ResponseEntity.ok(filteredTournaments);
+  }
+
+
+  @PutMapping("{tournamentId}/tournamentTags")
+  public ResponseEntity<String> updateTournamentTags(@PathVariable UUID tournamentId, @RequestBody List<UUID> tagIds) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);
+    Set<TournamentTag> tournamentTags = fetchTournamentTags(tagIds);
+
+    updateTournamentWithTags(tournament, tournamentTags);
+
+    return ResponseEntity.ok("Tournament tags updated successfully!");
+  }
+
+  @PostMapping("/{tournamentId}/register")
+  public ResponseEntity<Void> registerUserToTournament(
+      @PathVariable("tournamentId") UUID tournamentId,
+      @RequestBody Map<String, String> body) {
+
+    String email = body.get("email");
+    User user = validateUserByEmail(email);
+
+    Tournament tournament = validateTournamentAvailability(tournamentId);
+
+    tournamentUserTeamService.addUserToTournament(user, tournament);
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/{tournamentId}/registerTeam")
+  public ResponseEntity<Void> registerTeamToTournament(
+      @PathVariable("tournamentId") UUID tournamentId,
+      @RequestBody TournamentRegisterTeamDto tournamentRegisterTeamDto) {
+
+    Tournament tournament = validateTournamentAvailability(tournamentId);
+
+    String teamName = tournamentRegisterTeamDto.getTeamName();
+    User leader = userService.getUserById(tournamentRegisterTeamDto.getLeaderId());
+
+    Team temporaryTeam = createTemporaryTeam(teamName, leader);
+
+    List<String> emails = tournamentRegisterTeamDto.getEmails();
+    addUsersToTournament(emails, tournament, temporaryTeam);
+
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/{tournamentId}/saveMatches")
+  public ResponseEntity<String> saveMatches(
+      @PathVariable("tournamentId") UUID tournamentId,
+      @RequestBody List<MatchDto> matchDtos) {
+
+    Tournament tournament = checkIfMatchesGenerated(tournamentId);  // Throws TournamentMatchesAlreadyGeneratedException if matches are already generated
+
+    tournament.setAreMatchesGenerated(true);
+    saveAllMatchesWithParticipants(matchDtos, tournament);
+
+    return ResponseEntity.ok("Matches saved successfully!");
+  }
+
+  @GetMapping("/{tournamentId}/matches")
+  @ResponseBody
+  public ResponseEntity<List<Match>> getMatchesByTournament(@PathVariable("tournamentId") UUID tournamentId) {
+    Tournament tournament = checkIfMatchesNotGenerated(tournamentId);  // Throws MatchesNotGeneratedException if matches are not generated
+    List<Match> matches = matchService.getMatchesByTournament(tournament);
+    return ResponseEntity.ok(matches);
+  }
+
+  @GetMapping("/{tournamentId}/participants-count")
+  public ResponseEntity<Long> getParticipantsCount(@PathVariable UUID tournamentId) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);  // Throws TournamentNotFoundException if not found
+    long participantsCount = tournamentUserTeamService.getParticipantsCountByTournamentId(tournamentId);
+    return ResponseEntity.ok(participantsCount);
+  }
+
+
+  @DeleteMapping("/{tournamentId}/remove-user/{userId}")
+  public ResponseEntity<Void> removeUserFromTournament(@PathVariable UUID tournamentId, @PathVariable String userId) {
+    tournamentUserTeamService.removeUserFromTournament(userId, tournamentId);
+    return ResponseEntity.ok().build();
+  }
+
+  private void validateTournamentDto(TournamentDto tournamentDto) {
+    if (tournamentDto.getTournamentTableTypeId() == null ||
+        tournamentDto.getTournamentTypeId() == null ||
+        tournamentDto.getCityId() == null) {
+      throw new IllegalArgumentException("One or more required fields are missing.");
     }
   }
 
-  @PutMapping("{tournamentId}/tournamentTags")
-  public ResponseEntity<?> updateTournamentTags(@PathVariable UUID tournamentId, @RequestBody List<UUID> tagIds) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      Set<TournamentTag> tournamentTags = new HashSet<>();
-      for (UUID tagId : tagIds) {
-        TournamentTag tournamentTag = tournamentTagService.getTagById(tagId);
-        tournamentTags.add(tournamentTag);
-      }
-      tournament.setTournamentTags(tournamentTags);
-      tournamentService.saveTournament(tournament);
-      return ResponseEntity.ok("Tournament tournamentTags updated successfully!");
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
+  private Set<TournamentTag> fetchTournamentTags(List<UUID> tagIds) {
+    Set<TournamentTag> tournamentTags = new HashSet<>();
+    for (UUID tagId : tagIds) {
+      TournamentTag tournamentTag = tournamentTagService.getTagById(tagId);
+      tournamentTags.add(tournamentTag);
     }
+    return tournamentTags;
+  }
+
+  private void updateTournamentWithTags(Tournament tournament, Set<TournamentTag> tournamentTags) {
+    tournament.setTournamentTags(tournamentTags);
+    tournamentService.saveTournament(tournament);
   }
 
   private boolean isTournamentFull(Tournament tournament) {
@@ -245,130 +278,67 @@ public class TournamentController {
     return currentParticipantsCount >= tournament.getMaxParticipants();
   }
 
-  @PostMapping("/{tournamentId}/register")
-  public ResponseEntity<?> registerUserToTournament(@PathVariable("tournamentId") UUID tournamentId,
-                                                    @RequestBody Map<String, String> body) {
-    try {
-      String email = body.get("email");
-      User user = userService.getUserByEmail(email);
-      if (user == null) {
-        return ResponseEntity.badRequest().body("User with email " + email + " does not exist");
-      } else {
-        Tournament tournament = tournamentService.getTournamentById(tournamentId);
+  private User validateUserByEmail(String email) {
+    User user = userService.getUserByEmail(email);
+    if (user == null) {
+      throw new UserEmailNotFoundException(email);
+    }
+    return user;
+  }
 
-        if (isTournamentFull(tournament)) {
-          return ResponseEntity.badRequest().body("The tournament is already full");
-        }
+  private Tournament validateTournamentAvailability(UUID tournamentId) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);
+    if (isTournamentFull(tournament)) {
+      throw new TournamentFullException("The tournament is already full");
+    }
+    return tournament;
+  }
 
-        tournamentUserTeamService.addUserToTournament(user, tournament);
-      }
-      return ResponseEntity.ok().build();
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
+
+  private Team createTemporaryTeam(String teamName, User leader) {
+    Team temporaryTeam = new Team();
+    temporaryTeam.setName(teamName);
+    temporaryTeam.setLeader(leader);
+    teamService.saveTeam(temporaryTeam);
+    return temporaryTeam;
+  }
+
+  private void addUsersToTournament(List<String> emails, Tournament tournament, Team temporaryTeam) {
+    for (String email : emails) {
+      User user = validateUserByEmail(email);
+      tournamentUserTeamService.addUserTeamToTournament(user, tournament, temporaryTeam);
     }
   }
 
-  @PostMapping("/{tournamentId}/registerTeam")
-  public ResponseEntity<?> registerUserToTournament(@PathVariable("tournamentId") UUID tournamentId,
-                                                    @RequestBody TournamentRegisterTeamDto tournamentRegisterTeamDto) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
+  private Tournament checkIfMatchesGenerated(UUID tournamentId) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);
+    if (tournament.getAreMatchesGenerated()) {
+      throw new MatchesAlreadyGeneratedException("Matches already generated for this tournament!");
+    }
+    return tournament;
+  }
 
-      if (isTournamentFull(tournament)) {
-        return ResponseEntity.badRequest().body("The tournament is already full");
-      } else {
+  private void saveAllMatchesWithParticipants(List<MatchDto> matchDtos, Tournament tournament) {
+    for (MatchDto matchDto : matchDtos) {
+      Match match = matchService.mapMatch(matchDto, tournament);
+      matchService.saveMatch(match);
 
-        String teamName = tournamentRegisterTeamDto.getTeamName();
-        String leaderId = tournamentRegisterTeamDto.getLeaderId();
-        User leader = userService.getUserById(leaderId);
+      List<MatchPlayer> matchPlayers = matchPlayerService.mapMatchPlayers(matchDto.getParticipants(), match);
+      matchPlayerService.saveMatchPlayers(matchPlayers);
 
-        // Creating temporary team for users
-        Team temporaryTeam = new Team();
-        temporaryTeam.setName(teamName);
-        temporaryTeam.setLeader(leader);
-        teamService.saveTeam(temporaryTeam);
-
-        // Adding users to team and tournament
-        List<String> emails = tournamentRegisterTeamDto.getEmails();
-        for (String email : emails) {
-          User user = userService.getUserByEmail(email);
-          tournamentUserTeamService.addUserTeamToTournament(user, tournament, temporaryTeam);
-        }
-      }
-      return ResponseEntity.ok().build();
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
+      match.setParticipants(matchPlayers);
     }
   }
 
-  @PostMapping("/{tournamentId}/saveMatches")
-  public ResponseEntity<?> saveMatches(@PathVariable("tournamentId") UUID tournamentId,
-                                       @RequestBody List<MatchDto> matchDtos) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      if (tournament.getAreMatchesGenerated()) {
-        return ResponseEntity.badRequest().body("Matches already generated for this tournament!");
-      }
-      tournament.setAreMatchesGenerated(true);
-
-      for (MatchDto matchDto : matchDtos) {
-        Match match = matchService.mapMatch(matchDto, tournament);
-        matchService.saveMatch(match);
-
-        List<MatchPlayer> matchPlayers = matchPlayerService.mapMatchPlayers(matchDto.getParticipants(), match);
-        matchPlayerService.saveMatchPlayers(matchPlayers);
-
-        match.setParticipants(matchPlayers);
-      }
-
-      return ResponseEntity.ok("Matches saved successfully!");
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
+  private Tournament checkIfMatchesNotGenerated(UUID tournamentId) {
+    Tournament tournament = tournamentService.getTournamentById(tournamentId);
+    if (!tournament.getAreMatchesGenerated()) {
+      throw new MatchesNotGeneratedException("Matches not generated for this tournament!");
     }
+    return tournament;
   }
 
-  @GetMapping("/{tournamentId}/matches")
-  @ResponseBody
-  public ResponseEntity<?> getMatchesByTournament(@PathVariable("tournamentId") UUID tournamentId) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      if (!tournament.getAreMatchesGenerated()) {
-        return ResponseEntity.badRequest().body("Matches not generated for this tournament!");
-      }
-      List<Match> matches = matchService.getMatchesByTournament(tournament);
-      return ResponseEntity.ok(matches);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-  }
-
-  @GetMapping("/{tournamentId}/participants-count")
-  public ResponseEntity<?> getParticipantsCount(@PathVariable UUID tournamentId) {
-    try {
-      Tournament tournament = tournamentService.getTournamentById(tournamentId);
-
-      if (tournament == null) {
-        return ResponseEntity.badRequest().body("Tournament not found with ID: " + tournamentId);
-      }
-
-      long participantsCount = tournamentUserTeamService.getParticipantsCountByTournamentId(tournamentId);
-      return ResponseEntity.ok(participantsCount);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-  }
-
-  @DeleteMapping("/{tournamentId}/remove-user/{userId}")
-  public ResponseEntity<?> removeUserFromTournament(@PathVariable UUID tournamentId, @PathVariable String userId) {
-    try {
-      tournamentUserTeamService.removeUserFromTournament(userId, tournamentId);
-      return ResponseEntity.ok().build();
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-  }
-
-  public Tournament toTournament(TournamentDto tournamentDto) {
+  private Tournament toTournament(TournamentDto tournamentDto) {
     Tournament tournament = new Tournament();
 
     tournament.setName(tournamentDto.getName());

@@ -1,5 +1,6 @@
 package com.sourcery.sport.tournament.service;
 
+import com.sourcery.sport.exception.TournamentNotFoundException;
 import com.sourcery.sport.tournament.dto.TournamentUpdateDto;
 import com.sourcery.sport.tournament.model.City;
 import com.sourcery.sport.tournament.model.Tournament;
@@ -52,8 +53,10 @@ public class TournamentServiceImpl implements TournamentService {
 
   @Override
   public Tournament getTournamentById(UUID id) {
-    return tournamentRepository.findById(id).orElse(null);
+    return tournamentRepository.findById(id)
+        .orElseThrow(() -> new TournamentNotFoundException("Tournament not found with ID: " + id));
   }
+
 
   @Override
   public List<Tournament> getTournamentsByDateRange(LocalDateTime startRange, LocalDateTime endRange) {
