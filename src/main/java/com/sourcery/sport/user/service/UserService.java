@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
-  User addNewUser(User user);
 
-  User getUserProfile(String id);
+  User addNewUser(User user);
 
   UserDto toUserProfile(User user);
 

@@ -23,21 +23,18 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User getUserProfile(String id) {
-    return userRepository.findUserById(id);
-  }
-
-  @Override
   public UserDto toUserProfile(User user) {
     if (user.getCity() == null) {
       return new UserDto(user.getId(), user.getName(),
           user.getSurname(), user.getEmail(),
-          user.getImage(), user.getPhoneNumber(), null);
+          user.getImage(), user.getPhoneNumber(), null
+      );
     }
     UserDto userDto = new UserDto(user.getId(), user.getName(),
         user.getSurname(), user.getEmail(),
         user.getImage(), user.getPhoneNumber(),
-        user.getCity().getId());
+        user.getCity().getId()
+    );
     return userDto;
   }
 
