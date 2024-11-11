@@ -1,4 +1,4 @@
-package com.sourcery.sport.tournament.service;
+package com.sourcery.sport.mocks;
 
 import com.sourcery.sport.exception.TournamentNotFoundException;
 import com.sourcery.sport.tournament.dto.TournamentUpdateDto;
@@ -6,30 +6,25 @@ import com.sourcery.sport.tournament.model.City;
 import com.sourcery.sport.tournament.model.Tournament;
 import com.sourcery.sport.tournament.model.TournamentTableType;
 import com.sourcery.sport.tournament.model.TournamentType;
-import com.sourcery.sport.tournament.repository.TournamentRepository;
+import com.sourcery.sport.tournament.service.TournamentService;
 import com.sourcery.sport.tournamenttag.model.TournamentTag;
-import com.sourcery.sport.tournamenttag.service.TournamentTagService;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-import org.springframework.stereotype.Service;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Service
-public class TournamentServiceImpl implements TournamentService {
+public class TournamentServiceMock implements TournamentService {
+  private final Map<UUID, Tournament> tournamentStore = new HashMap<>();
+  private final TournamentTableTypeServiceMock tournamentTableTypeService;
+  private final TournamentTypeServiceMock tournamentTypeService;
+  private final CityServiceMock cityService;
+  private final TournamentTagServiceMock tournamentTagService;
 
-  private final TournamentRepository tournamentRepository;
-  private final TournamentTableTypeService tournamentTableTypeService;
-  private final TournamentTypeService tournamentTypeService;
-  private final CityService cityService;
-  private final TournamentTagService tournamentTagService;
-
-  public TournamentServiceImpl(TournamentRepository tournamentRepository,
-                               TournamentTableTypeService tournamentTableTypeService,
-                               TournamentTypeService tournamentTypeService,
-                               CityService cityService,
-                               TournamentTagService tournamentTagService) {
-    this.tournamentRepository = tournamentRepository;
+  public TournamentServiceMock(
+      TournamentTableTypeServiceMock tournamentTableTypeService,
+      TournamentTypeServiceMock tournamentTypeService,
+      CityServiceMock cityService,
+      TournamentTagServiceMock tournamentTagService
+  ) {
     this.tournamentTableTypeService = tournamentTableTypeService;
     this.tournamentTypeService = tournamentTypeService;
     this.cityService = cityService;
@@ -38,34 +33,47 @@ public class TournamentServiceImpl implements TournamentService {
 
   @Override
   public Tournament saveTournament(Tournament tournament) {
-    return tournamentRepository.save(tournament);
+    tournamentStore.put(tournament.getId(), tournament);
+    return tournament;
   }
 
   @Override
   public List<Tournament> getAll() {
-    return tournamentRepository.findAll();
+    return new ArrayList<>(tournamentStore.values());
   }
 
   @Override
   public List<Tournament> getByCityId(UUID cityId) {
-    return tournamentRepository.findTournamentByCityId(cityId);
+    return tournamentStore.values().stream()
+        .filter(tournament -> tournament.getCity() != null && cityId.equals(tournament.getCity().getId()))
+        .collect(Collectors.toList());
   }
 
   @Override
   public Tournament getTournamentById(UUID id) {
-    return tournamentRepository.findById(id)
-        .orElseThrow(() -> new TournamentNotFoundException("Tournament not found with ID: " + id));
+    Tournament tournament = tournamentStore.get(id);
+    if (tournament == null) {
+      throw new TournamentNotFoundException("Tournament not found with ID: " + id);
+    }
+    return tournament;
   }
-
 
   @Override
   public List<Tournament> getTournamentsByDateRange(LocalDateTime startRange, LocalDateTime endRange) {
-    return tournamentRepository.findByStartDateBetweenOrEndDateBetween(startRange, endRange, startRange, endRange);
+    return tournamentStore.values().stream()
+        .filter(tournament ->
+            (tournament.getStartDate().isAfter(startRange) && tournament.getStartDate().isBefore(endRange)) ||
+                (tournament.getEndDate().isAfter(startRange) && tournament.getEndDate().isBefore(endRange))
+        )
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<Tournament> getTournamentsByTags(List<UUID> tagsId) {
-    return tournamentRepository.findDistinctByTournamentTags_IdIn(tagsId);
+    return tournamentStore.values().stream()
+        .filter(tournament -> tournament.getTournamentTags().stream()
+            .anyMatch(tag -> tagsId.contains(tag.getId())))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -77,8 +85,7 @@ public class TournamentServiceImpl implements TournamentService {
     existingTournament.setEndDate(tournamentDto.getEndDate());
     existingTournament.setMaxParticipants(tournamentDto.getMaxParticipants());
 
-    TournamentTableType tournamentTableType = tournamentTableTypeService
-        .getTournamentTableType(tournamentDto.getTournamentTableTypeId());
+    TournamentTableType tournamentTableType = tournamentTableTypeService.getTournamentTableType(tournamentDto.getTournamentTableTypeId());
     TournamentType tournamentType = tournamentTypeService.getTournamentType(tournamentDto.getTournamentTypeId());
     City city = cityService.getCity(tournamentDto.getCityId());
 
@@ -90,10 +97,11 @@ public class TournamentServiceImpl implements TournamentService {
     existingTournament.setTeamSize(tournamentDto.getTeamSize());
 
     List<TournamentTag> tournamentTags = tournamentDto.getTagIds().stream()
-        .map(tournamentTagService::getTagById).toList();
-
+        .map(tournamentTagService::getTagById)
+        .toList();
     existingTournament.setTournamentTags(new HashSet<>(tournamentTags));
 
     return saveTournament(existingTournament);
   }
 }
+
