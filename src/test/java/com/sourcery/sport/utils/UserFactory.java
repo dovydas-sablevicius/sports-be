@@ -2,7 +2,10 @@ package com.sourcery.sport.utils;
 
 import com.sourcery.sport.user.model.User;
 
-public class UserFactory {
+public final class UserFactory {
+
+  private UserFactory() {
+  }
 
   public static User CreateMockUser() {
     return new User(
