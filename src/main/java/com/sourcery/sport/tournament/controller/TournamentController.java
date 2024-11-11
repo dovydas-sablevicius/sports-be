@@ -113,12 +113,8 @@ public class TournamentController {
 
   @GetMapping("/all")
   public ResponseEntity<?> getAllTournaments() {
-    try {
       List<Tournament> tournaments = tournamentService.getAll();
       return ResponseEntity.ok(tournaments);
-    } catch (Exception ex) {
-      return ResponseEntity.badRequest().body(ex.getMessage());
-    }
   }
 
   @GetMapping("/get-tournament/{tournamentId}")

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class GlobalExceptionHandler {
   @ExceptionHandler(TournamentNotFoundException.class)
   public ResponseEntity<String> handleTournamentNotFound(TournamentNotFoundException ex) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
   }
 
   @ExceptionHandler(MatchesNotGeneratedException.class)
