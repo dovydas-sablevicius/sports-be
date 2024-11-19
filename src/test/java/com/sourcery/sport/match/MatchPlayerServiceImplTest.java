@@ -71,18 +71,38 @@ class MatchPlayerServiceImplTest {
 
   @Test
   void testMapMatchPlayers_TypeUser() {
-    MatchPlayerDto dto = new MatchPlayerDto();
-    dto.setType("USER");
-    dto.setId("user123");
+    MatchPlayerDto validDto = new MatchPlayerDto();
+    validDto.setType("USER");
+    validDto.setId("validUserId");
+
     User mockUser = new User();
-    when(userService.getUserById("user123")).thenReturn(mockUser);
-    List<MatchPlayerDto> dtos = Collections.singletonList(dto);
+    mockUser.setId("validUserId");
+    mockUser.setName("Test User");
+
+    when(userService.getUserById("validUserId")).thenReturn(mockUser);
+
+    MatchPlayerDto anotherDto = new MatchPlayerDto();
+    anotherDto.setType("USER");
+    anotherDto.setId("anotherUserId");
+
+    User anotherMockUser = new User();
+    anotherMockUser.setId("anotherUserId");
+    anotherMockUser.setName("Another User");
+
+    when(userService.getUserById("anotherUserId")).thenReturn(anotherMockUser);
+
+    List<MatchPlayerDto> dtos = Arrays.asList(validDto, anotherDto);
 
     List<MatchPlayer> result = matchPlayerService.mapMatchPlayers(dtos, match);
 
-    assertEquals(1, result.size());
+    assertEquals(2, result.size());
+    assertNotNull(result.get(0).getUser());
     assertEquals(mockUser, result.get(0).getUser());
-    verify(userService, times(1)).getUserById("user123");
+    assertNotNull(result.get(1).getUser());
+    assertEquals(anotherMockUser, result.get(1).getUser());
+
+    verify(userService, times(1)).getUserById("validUserId");
+    verify(userService, times(1)).getUserById("anotherUserId");
   }
 
   @Test
@@ -101,7 +121,6 @@ class MatchPlayerServiceImplTest {
     assertEquals(1, result.size());
     assertEquals("ACTIVE", result.get(0).getStatus());
   }
-
 
   @Test
   void testMapMatchPlayers_StatusNull() {

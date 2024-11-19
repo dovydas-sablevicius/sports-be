@@ -31,6 +31,7 @@ public class MatchPlayerServiceImpl implements MatchPlayerService {
     matchPlayerRepository.saveAll(matchPlayers);
   }
 
+  // Refactor
   @Override
   public List<MatchPlayer> mapMatchPlayers(List<MatchPlayerDto> matchPlayerDtos, Match match) {
     List<MatchPlayer> matchPlayers = new ArrayList<>();

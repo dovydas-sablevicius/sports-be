@@ -50,6 +50,7 @@ public class MatchServiceImpl implements MatchService {
     return matchRepository.findById(id).orElse(null);
   }
 
+  // Refactor
   @Override
   public void updateMatches(List<Match> updatedMatches) {
     List<Match> matchesToUpdate = matchRepository.findAllById(updatedMatches.stream().map(Match::getMatchId).toList());
