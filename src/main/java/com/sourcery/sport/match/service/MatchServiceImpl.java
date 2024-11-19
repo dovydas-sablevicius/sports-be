@@ -68,13 +68,3 @@ public class MatchServiceImpl implements MatchService {
     match.setParticipants(updatedMatch.getParticipants());
   }
 }
-
-// Refactoring Analysis:
-// 1. SRP (Single Responsibility Principle):
-//    - Extracted `updateMatchDetails` method to ensure that `updateMatches` focuses only on orchestrating the update process, while `updateMatchDetails` handles the details of updating a match.
-// 2. DRY (Don't Repeat Yourself):
-//    - The logic to update fields of `Match` was moved to a dedicated method (`updateMatchDetails`), avoiding repetition and making future modifications easier.
-// 3. Law of Demeter (Principle of Least Knowledge):
-//    - Used `.ifPresent()` to limit the direct exposure of updatedMatches list when finding and updating a match, thereby reducing tight coupling.
-// 4. Iterator Pattern (GRASP):
-//    - Utilized `forEach` on `matchesToUpdate` to iterate over matches more declaratively, simplifying the control flow and enhancing readability.
