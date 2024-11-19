@@ -88,6 +88,6 @@ public class Tournament {
   public List<UUID> getTournamentTagsIds() {
     return tournamentTags.stream()
         .map(TournamentTag::getId)
-        .collect(Collectors.toList());
+        .toList();
   }
 }

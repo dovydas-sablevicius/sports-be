@@ -6,11 +6,12 @@ import com.sourcery.sport.match.model.MatchPlayer;
 import com.sourcery.sport.match.repository.MatchPlayerRepository;
 import com.sourcery.sport.team.service.TeamService;
 import com.sourcery.sport.user.service.UserService;
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import org.springframework.stereotype.Service;
 
 @Service
 public class MatchPlayerServiceImpl implements MatchPlayerService {
@@ -35,33 +36,20 @@ public class MatchPlayerServiceImpl implements MatchPlayerService {
   public List<MatchPlayer> mapMatchPlayers(List<MatchPlayerDto> matchPlayerDtos, Match match) {
     List<MatchPlayer> matchPlayers = new ArrayList<>();
     for (MatchPlayerDto matchPlayerDto : matchPlayerDtos) {
-      MatchPlayer matchPlayer = new MatchPlayer();
-      matchPlayer.setId(UUID.randomUUID());
-      matchPlayer.setMatch(match);
-      matchPlayer.setScore(matchPlayerDto.getScore());
-      matchPlayer.setIsWinner(matchPlayerDto.getIsWinner());
-
-      if (matchPlayerDto.getStatus() != null && matchPlayerDto.getStatus().equals("NO_PARTY")) {
+      if (shouldSkipPlayer(matchPlayerDto)) {
         continue;
       }
-
-      if (matchPlayerDto.getType().equals("TEAM")) {
-        matchPlayer.setTeam(teamService.getTeamById(UUID.fromString(matchPlayerDto.getId())));
-      } else {
-        matchPlayer.setUser(userService.getUserById(matchPlayerDto.getId()));
-      }
-
-      if (Objects.nonNull(matchPlayerDto.getStatus())) {
-        matchPlayer.setStatus(matchPlayerDto.getStatus());
-      }
-
+      MatchPlayer matchPlayer = createMatchPlayerFromDto(matchPlayerDto, match);
       matchPlayers.add(matchPlayer);
     }
     return matchPlayers;
   }
 
-  @Override
-  public MatchPlayer addMatchPlayer(MatchPlayerDto matchPlayerDto, Match match) {
+  private boolean shouldSkipPlayer(MatchPlayerDto matchPlayerDto) {
+    return matchPlayerDto.getStatus() != null && matchPlayerDto.getStatus().equals("NO_PARTY");
+  }
+
+  private MatchPlayer createMatchPlayerFromDto(MatchPlayerDto matchPlayerDto, Match match) {
     MatchPlayer matchPlayer = new MatchPlayer();
     matchPlayer.setId(UUID.randomUUID());
     matchPlayer.setMatch(match);
@@ -79,6 +67,11 @@ public class MatchPlayerServiceImpl implements MatchPlayerService {
     }
 
     return matchPlayer;
+  }
+
+  @Override
+  public MatchPlayer addMatchPlayer(MatchPlayerDto matchPlayerDto, Match match) {
+    return createMatchPlayerFromDto(matchPlayerDto, match);
   }
 
   @Override

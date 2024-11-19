@@ -53,15 +53,18 @@ public class MatchServiceImpl implements MatchService {
   @Override
   public void updateMatches(List<Match> updatedMatches) {
     List<Match> matchesToUpdate = matchRepository.findAllById(updatedMatches.stream().map(Match::getMatchId).toList());
-    for (Match match : matchesToUpdate) {
-      for (Match updatedMatch : updatedMatches) {
-        if (match.getMatchId().equals(updatedMatch.getMatchId())) {
-          match.setState(updatedMatch.getState());
-          match.setIsUpdated(updatedMatch.getIsUpdated());
-          match.setParticipants(updatedMatch.getParticipants());
-        }
-      }
-    }
+    matchesToUpdate.forEach(match -> {
+      updatedMatches.stream()
+          .filter(updatedMatch -> match.getMatchId().equals(updatedMatch.getMatchId()))
+          .findFirst()
+          .ifPresent(updatedMatch -> updateMatchDetails(match, updatedMatch));
+    });
     matchRepository.saveAll(matchesToUpdate);
+  }
+
+  private void updateMatchDetails(Match match, Match updatedMatch) {
+    match.setState(updatedMatch.getState());
+    match.setIsUpdated(updatedMatch.getIsUpdated());
+    match.setParticipants(updatedMatch.getParticipants());
   }
 }

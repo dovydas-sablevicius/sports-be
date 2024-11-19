@@ -1,7 +1,6 @@
 package com.sourcery.sport.tournament.controller;
 
 import com.sourcery.sport.tournament.model.Country;
-import com.sourcery.sport.tournament.service.CityService;
 import com.sourcery.sport.tournament.service.CountryService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/countries")
 public class CountryController {
   private final CountryService countryService;
-  private final CityService cityService;
 
-  public CountryController(CountryService countryService, CityService cityService) {
+  public CountryController(CountryService countryService) {
     this.countryService = countryService;
-    this.cityService = cityService;
   }
 
   @GetMapping("get-all-countries")
