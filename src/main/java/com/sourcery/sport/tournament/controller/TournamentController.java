@@ -306,7 +306,7 @@ public class TournamentController {
                                        @RequestBody List<MatchDto> matchDtos) {
     try {
       Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      if (tournament.getAreMatchesGenerated()) {
+      if (Boolean.TRUE.equals(tournament.getAreMatchesGenerated())) {
         return ResponseEntity.badRequest().body("Matches already generated for this tournament!");
       }
       tournament.setAreMatchesGenerated(true);
@@ -332,7 +332,7 @@ public class TournamentController {
   public ResponseEntity<?> getMatchesByTournament(@PathVariable("tournamentId") UUID tournamentId) {
     try {
       Tournament tournament = tournamentService.getTournamentById(tournamentId);
-      if (!tournament.getAreMatchesGenerated()) {
+      if (Boolean.FALSE.equals(tournament.getAreMatchesGenerated())) {
         return ResponseEntity.badRequest().body("Matches not generated for this tournament!");
       }
       List<Match> matches = matchService.getMatchesByTournament(tournament);

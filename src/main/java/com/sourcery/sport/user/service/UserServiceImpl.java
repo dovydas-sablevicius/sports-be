@@ -29,16 +29,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserDto toUserProfile(User user) {
-    if (user.getCity() == null) {
-      return new UserDto(user.getId(), user.getName(),
-          user.getSurname(), user.getEmail(),
-          user.getImage(), user.getPhoneNumber(), null);
-    }
-    UserDto userDto = new UserDto(user.getId(), user.getName(),
+    return new UserDto(user.getId(), user.getName(),
         user.getSurname(), user.getEmail(),
         user.getImage(), user.getPhoneNumber(),
-        user.getCity().getId());
-    return userDto;
+        user.getCity() != null ? user.getCity().getId() : null);
   }
 
   @Override

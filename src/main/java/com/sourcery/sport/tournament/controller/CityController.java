@@ -2,7 +2,6 @@ package com.sourcery.sport.tournament.controller;
 
 import com.sourcery.sport.tournament.model.City;
 import com.sourcery.sport.tournament.service.CityService;
-import com.sourcery.sport.tournament.service.CountryService;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/cities")
 public class CityController {
-  private final CountryService countryService;
   private final CityService cityService;
 
-  public CityController(CountryService countryService, CityService cityService) {
-    this.countryService = countryService;
+  public CityController( CityService cityService) {
     this.cityService = cityService;
   }
 
